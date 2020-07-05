@@ -46,6 +46,7 @@ Fixpoint lift_rec (t : tm ) (k:nat) (n:nat): tm :=
 
 Definition lift (n : nat) (t:tm) : tm := lift_rec t 0 n.
 
+(*There seems to be a bug? in the original source in i=k case, this currently works for example below*)
 Definition insert_var (i k :nat) (v:tm) : tm :=
   match (lt_eq_lt_dec i k) with
   (*i<k*)| inleft (left _) => var i (*Nothing to do here*)
@@ -81,7 +82,7 @@ Inductive beta1step : tm -> tm -> Prop :=
     app n l -->b app n m
   where "t1 -->b t2" := (beta1step t1 t2).
 
-(*Generic form of multi step (reflexive transitive) relation*)
+(*Multi step (reflexive transitive) relation of 1stepbeta*)
 Inductive beta  : tm -> tm -> Prop :=
   | beta_refl   : forall (x : tm), beta x x
   | beta_step   : forall (x y  : tm),
