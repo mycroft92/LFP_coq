@@ -7,9 +7,9 @@ Import ListNotations.
 Require Import Arith.PeanoNat.
 
 (*Syntax of tm exp*)
-(*using De Bruijin indices*)
+(*using De Bruijn indices*)
 
-(*De Bruijin formulation taken from https://github.com/coq-contribs/tm/blob/master/Terms.v*)
+(*De Bruijn formulation taken from https://github.com/coq-contribs/tm/blob/master/Terms.v*)
 
 Inductive tm : Type :=
 | var : nat -> tm
@@ -46,6 +46,7 @@ Fixpoint lift_rec (t : tm ) (k:nat) (n:nat): tm :=
 
 Definition lift (n : nat) (t:tm) : tm := lift_rec t 0 n.
 
+(*their indices start at 0 and I assumed 1*)
 (*There seems to be a bug? in the original source in i=k case, this currently works for example below*)
 Definition insert_var (i k :nat) (v:tm) : tm :=
   match (lt_eq_lt_dec i k) with
