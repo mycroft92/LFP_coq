@@ -85,7 +85,7 @@ Qed.
 
 Lemma ex2 : forall A B, [] ||- A --> (B--> A).
 Proof.
-info_auto 8 with NDhints.
+    info_auto 8 with NDhints.
     (* intros. apply cImplI. apply cImplI. apply cAssumption. auto. *)
 Qed.
 
