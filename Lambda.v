@@ -26,7 +26,7 @@ Fixpoint freevars_rec (t: tm) (k:nat) : list nat :=
   | app l m => (freevars_rec l k) ++ (freevars_rec m k) 
   end.
 
-Definition freevars t := freevars_rec t 0 .
+Definition freevars t := freevars_rec t 0.
 
 
 (*auxiliary function to displace the indices to the proper level*)
@@ -62,7 +62,7 @@ Fixpoint subs_rec (t:tm) (k:nat) (v:tm) : tm :=
   | app t1 t2 => (app (subs_rec t1 k v) (subs_rec t2 k v))
   end.
 
-Definition substitute t v := subs_rec t 0 v .
+Definition substitute t v := subs_rec t 0 v.
 
 
 (*From here I follow the slides *)
@@ -267,3 +267,5 @@ Qed.
 (*Eta reduction and confluence will come later*)
 
 Compute freevars (\.[2 >> 1]).
+
+Definition diamondProperty (R: relation tm)
