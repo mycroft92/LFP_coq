@@ -264,8 +264,8 @@ Proof.
   unfold compatible; split; auto.
 Qed.
 
-(*Eta reduction and confluence will come later*)
+(*Confluence and Church-Rosser will come later*)
 
 Compute freevars (\.[2 >> 1]).
 
-Definition diamondProperty (R: relation tm)
+(* Definition diamondProperty (R: relation tm) *)
