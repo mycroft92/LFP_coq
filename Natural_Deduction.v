@@ -18,7 +18,7 @@ Inductive tm : Set :=
 | tAnd   : tm -> tm -> tm
 | tOr    : tm -> tm -> tm
 | tImpl  : tm -> tm -> tm.
-Coercion tVar : nat >-> tm.
+(*  *)
 
  Notation " ⊤ " := tTrue (at level 0).
  Notation " ⊥ " := tFalse (at level 0).
@@ -31,8 +31,29 @@ Coercion tVar : nat >-> tm.
  Notation "A '-->' B" := (tImpl A B)  (at level 30, right associativity).
 
 Definition context := (list tm)%type.
-Reserved Notation " A '||-' B" ( at level 90).
 
+
+Lemma tm_eq_dec : forall x y:tm, {x=y}+{x<>y}.
+Proof.
+    induction x; destruct y; try (now right); try (now left).
+    - destruct (Nat.eq_dec n n0) eqn:E; subst; auto. right. congruence.
+    - destruct (IHx1 y1) eqn:E1.
+        + destruct (IHx2 y2) eqn:E2; subst; auto.
+          * right. congruence.
+        + right. congruence.
+    - destruct (IHx1 y1) eqn:E1.
+        + destruct (IHx2 y2) eqn:E2; subst; auto.
+            * right. congruence.
+        + right. congruence.
+    - destruct (IHx1 y1) eqn:E1.
+        + destruct (IHx2 y2) eqn:E2; subst; auto.
+            * right. congruence.
+        + right. congruence.
+Qed.
+Coercion tVar : nat >-> tm.
+    
+
+Reserved Notation " A '||-' B" ( at level 90).
 Inductive deductionTree : context -> tm -> Prop :=
 | cTrue: forall c, 
     c ||- tTrue
@@ -115,10 +136,13 @@ Definition listSat (A:assignment) (c:context) := List.Forall (fun x => truthAssi
 
 Definition logicalConsequence (c:context) (p:tm) := forall A, listSat A c -> truthAssign A p.
 
-Hint Unfold truthAssign: NDhints.
-Hint Unfold logicalConsequence listSat: NDhints.
+
+Hint Unfold logicalConsequence listSat truthAssign: NDhints.
+Hint Extern 1 (logicalConsequence _) => (unfold logicalConsequence in *): NDhints.
+Hint Extern 1 (listSat _ _) => (unfold listSat in *): NDhints.
+Hint Extern 1 (truthAssign _ _) => (unfold truthAssign in *; fold truthAssign in *): NDhints.
 Hint Constructors Forall: NDhints.
-Hint Resolve Forall_forall Forall_inv_tail: NDhints.
+Hint Resolve Forall_forall : NDhints.
 
 
 
@@ -126,6 +150,8 @@ Notation "Gamma '|=' p" := (logicalConsequence Gamma p) (at level 90).
 
 Ltac sound_help:=
     match goal with
+    | [H: In ?x ?y |- _] => (unfold logicalConsequence in * ; unfold truthAssign in *; fold truthAssign in *;
+                 intros ; unfold listSat in * ) 
     | H: ?c ||- ?x  , 
       IH: ?c |= ?x |- _ => (unfold logicalConsequence in * ; unfold truthAssign in *; fold truthAssign in *; auto with NDhints ) 
     end.
@@ -133,8 +159,8 @@ Theorem Soundness: forall c p, c ||- p -> c |= p.
 Proof.
     intros c p H. induction H.
     - auto with NDhints. 
-    - unfold logicalConsequence. intros * H_1. unfold listSat in H_1. 
-        rewrite -> Forall_forall in H_1. auto. 
+    - sound_help. unfold listSat in H0. 
+        rewrite -> Forall_forall in H0. auto. 
     - sound_help.  
     - sound_help. intros * H_1. apply IHdeductionTree in H_1. destruct H_1 as [H_1l H_1r]. auto.
     - sound_help. intros * H_1. apply IHdeductionTree in H_1. destruct H_1 as [H_1l H_1r]. auto.

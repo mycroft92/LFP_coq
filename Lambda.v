@@ -10,7 +10,7 @@ Require Import Arith.PeanoNat.
 (*using De Bruijn indices*)
 
 (*De Bruijn formulation taken from https://github.com/coq-contribs/tm/blob/master/Terms.v*)
-
+(*Now moved to https://github.com/coq-contribs/lambda/tree/f531eede1b2088eff15b856558ec40f177956b96*)
 Inductive tm : Type :=
 | var : nat -> tm
 | abs : tm -> tm
@@ -90,7 +90,7 @@ Inductive beta  : tm -> tm -> Prop :=
                     beta1step x y ->
                     beta x y
   | beta_trans  : forall (x y z: tm), 
-                  beta x y ->
+                  beta1step x y ->
                   beta y z ->
                   beta x z. 
 Hint Constructors beta1step.
@@ -106,7 +106,7 @@ Proof.
     induction 1; 
     auto. (*if l =l' or if we reached from 1-step beta it's trivial*)
     apply beta_trans with (abs y); (*if `abs l -->* abs y and `abs y -->* absl'` use transitivity*)
-    trivial.
+    eauto.    
 Qed.
  
 
@@ -120,14 +120,22 @@ Proof.
     induction 1; auto. apply beta_trans with (app m y); auto.
 Qed.
 
+Lemma betaTrans: forall l m n, l -->* m -> m-->*n -> l-->*n.
+Proof.
+  induction 1.
+  - auto.
+  - intros. eapply beta_trans; eauto.
+  - intros. apply IHbeta in H1 as H2. eapply beta_trans; eauto.
+Qed.
+
 Lemma betaAppRed : forall l l' m  m',  l -->* l' -> m -->* m' -> (app l m) -->* (app l' m').
 Proof.
   intros. 
   apply (betaAppRedL l l' m) in H .
-  apply (betaAppRedR m m' l') in H0. apply beta_trans with (app l' m); auto.
+  apply (betaAppRedR m m' l') in H0. eapply betaTrans with (app l' m); auto.
 Qed.
 
-Hint Resolve betaAppRed betaAppRedR betaAppRedL betaAbsRed.
+Hint Resolve betaAppRed betaAppRedR betaAppRedL betaAbsRed betaTrans.
 (************Normalization related*************)
 Fixpoint redux (t:tm) : Prop :=
   match t with
@@ -180,9 +188,8 @@ Lemma omega_red_omega : forall l,  OMEGA -->* l -> OMEGA = l.
 Proof.
   intros. remember OMEGA as e.  induction H; auto. 
   - subst x; apply  omega_1step in H; auto.
-  - subst x. assert (OMEGA = OMEGA). { auto. } apply IHbeta1 in  H1.
-    symmetry in H1. apply IHbeta2 in H1. subst y. 
-    assert  (OMEGA = OMEGA). { auto. } apply IHbeta1 in H1. auto.
+  - subst x. assert (OMEGA = OMEGA). { auto. } apply omega_1step in H as H2. symmetry in H2.
+  subst; auto.
 Qed.
 
 
@@ -190,11 +197,11 @@ Qed.
 
 Reserved Notation "t1 '=b' t2" (at level 50, no associativity).
 Inductive betaEquality : tm -> tm -> Prop :=
+| refl  : forall l,
+    l =b l 
 | basis : forall l m,
     l -->* m ->
     l =b m
-| refl  : forall l,
-    l =b l 
 | symm  : forall l m,
     l =b m ->
     m =b l
@@ -203,7 +210,7 @@ Inductive betaEquality : tm -> tm -> Prop :=
     m =b n ->
     l =b n
 where "l =b n" := (betaEquality l n).
-Hint Constructors betaEquality.
+Hint Constructors betaEquality. 
 
 Lemma  BetaEqAbs: forall l m, l =b m -> abs l =b abs m.
 Proof.
@@ -261,11 +268,65 @@ Hint Constructors CompatibleClosure.
 
 Lemma CompatibleClosure_is_compatible : forall R, compatible (CompatibleClosure R).
 Proof.
-  unfold compatible; split; auto.
+  unfold compatible; split; info_auto.
 Qed.
 
-(*Confluence and Church-Rosser will come later*)
+
 
 Compute freevars (\.[2 >> 1]).
 
-(* Definition diamondProperty (R: relation tm) *)
+Definition diamondProperty (R: relation tm) :=
+  forall L M N , (R L M) -> (R L N) -> exists P, (R M P) /\ (R N P).
+
+Lemma beta1sConf_is_semiConf: diamondProperty beta1step -> 
+  forall L M N, L -->b M -> L -->* N -> exists P, M-->*P /\ N-->*P.
+Proof.
+Admitted.
+Hint Resolve beta1sConf_is_semiConf.
+
+(* Lemma beta1sConf_is_betaConf: diamondProperty beta1step -> diamondProperty beta.
+Proof.
+intros; unfold diamondProperty in *.
+induction 1.
+- intros; induction H0.
+  * exists x; auto.
+  * exists y. auto.
+  * destruct IHbeta as [p IH1] eqn:E1.
+  destruct IH1 as [I1l I1r].
+  exists p. split. apply (beta_trans x y p); auto. auto.
+- intros. eauto using beta1sConf_is_semiConf.
+- intros.  
+  induction H2.
+  * eauto.
+  * assert (x-->*z) as H'. { apply beta_trans with (y:=y); auto. }
+   apply beta1sConf_is_semiConf with (N:=z) in H2; eauto.
+   destruct H2 as [p H'']. exists p. split; intuition.
+  * assert     *)
+(* - induction 1.
+  * exists y. auto.
+  * assert (exists q, y -->b q /\ y0 -->b q). {eapply H; eauto. }
+    destruct H2 as [q H2].
+    destruct H2 as [H2l H2r].
+    exists q. auto.
+  * induction H1_0; auto. *)
+
+Axiom confluence : diamondProperty beta.
+(*Assume confluence theorem on transitive closure of beta*)
+(*We prove Church Rosser with confluence on beta*)
+
+
+Theorem ChurchRosser:  forall L M, L =b M -> exists P, L -->* P /\ M -->* P.
+Proof.
+   induction 1. 
+  - exists l. auto.
+  - exists m. auto. (*trivial cases are if m=l and m is -->* reach from l*)
+  - destruct IHbetaEquality as [p IH] eqn:E . destruct IH as [Il Ir].
+     exists p. auto.
+  - destruct IHbetaEquality1 as [p IH1] eqn:E1.
+    destruct IHbetaEquality2 as [q IH2] eqn:E2.
+    destruct IH1 as [I1l I1r].
+    destruct IH2 as [I2l I2r].
+    assert (exists r, p -->* r /\ q-->*r) as IH. {apply (confluence m p q); auto. }
+    destruct IH as [r IH]. destruct IH as [Il Ir].
+    exists r. split ; eapply betaTrans; eauto.
+Qed.
