@@ -10,11 +10,12 @@ Require Import Arith.PeanoNat.
 (*using De Bruijn indices*)
 
 (*De Bruijn formulation taken from https://github.com/coq-contribs/tm/blob/master/Terms.v*)
-(*Now moved to https://github.com/coq-contribs/lambda/tree/f531eede1b2088eff15b856558ec40f177956b96*)
+(*Now moved to https://github.com/coq-contribs/lambda*)
 Inductive tm : Type :=
 | var : nat -> tm
-| abs : tm -> tm
-| app : tm -> tm -> tm.
+| abs : tm  -> tm
+| app : tm  -> tm -> tm.
+
 Coercion var : nat >-> tm.
 Notation " '\.' '[' x ']'" := (abs x).
 Notation " x '>>' y" := (app x y) (at level 40, left associativity). 
@@ -64,7 +65,7 @@ Fixpoint subs_rec (t:tm) (k:nat) (v:tm) : tm :=
 
 Definition substitute t v := subs_rec t 0 v.
 
-
+ 
 (*From here I follow the slides *)
 
 Reserved Notation "t1 -->b t2" (at  level 50).
@@ -284,32 +285,6 @@ Proof.
 Admitted.
 Hint Resolve beta1sConf_is_semiConf.
 
-(* Lemma beta1sConf_is_betaConf: diamondProperty beta1step -> diamondProperty beta.
-Proof.
-intros; unfold diamondProperty in *.
-induction 1.
-- intros; induction H0.
-  * exists x; auto.
-  * exists y. auto.
-  * destruct IHbeta as [p IH1] eqn:E1.
-  destruct IH1 as [I1l I1r].
-  exists p. split. apply (beta_trans x y p); auto. auto.
-- intros. eauto using beta1sConf_is_semiConf.
-- intros.  
-  induction H2.
-  * eauto.
-  * assert (x-->*z) as H'. { apply beta_trans with (y:=y); auto. }
-   apply beta1sConf_is_semiConf with (N:=z) in H2; eauto.
-   destruct H2 as [p H'']. exists p. split; intuition.
-  * assert     *)
-(* - induction 1.
-  * exists y. auto.
-  * assert (exists q, y -->b q /\ y0 -->b q). {eapply H; eauto. }
-    destruct H2 as [q H2].
-    destruct H2 as [H2l H2r].
-    exists q. auto.
-  * induction H1_0; auto. *)
-
 Axiom confluence : diamondProperty beta.
 (*Assume confluence theorem on transitive closure of beta*)
 (*We prove Church Rosser with confluence on beta*)
@@ -330,3 +305,15 @@ Proof.
     destruct IH as [r IH]. destruct IH as [Il Ir].
     exists r. split ; eapply betaTrans; eauto.
 Qed.
+
+(*
+Concur sketch:
+1. Two rules missing in decorated table, ite, on and when with decorations
+  a. clone Forte to CONCUR
+2. Figure 1 needs to be formalized in coq completely*
+3. Typing rules for Lustre:  
+  a. Refinement types of subtype constraints
+4. Volpano Smith, Chandrika+ SP FORTE 2019, Memocode paper proof, 
+  a. replicate non-interference for Lustre*
+5. Make sure Lustre stream semantics are complete.
+*)
