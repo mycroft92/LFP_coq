@@ -301,14 +301,3 @@ Proof.
     exists r. split ; eapply betaTrans; eauto.
 Qed.
 
-(*
-Concur sketch:
-1. Two rules missing in decorated table, ite, on and when with decorations
-  a. clone Forte to CONCUR
-2. Figure 1 needs to be formalized in coq completely*
-3. Typing rules for Lustre:  
-  a. Refinement types of subtype constraints
-4. Volpano Smith, Chandrika+ SP FORTE 2019, Memocode paper proof, 
-  a. replicate non-interference for Lustre*
-5. Make sure Lustre stream semantics are complete.
-*)
