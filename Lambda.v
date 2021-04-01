@@ -279,10 +279,7 @@ Compute freevars (\.[2 >> 1]).
 Definition diamondProperty (R: relation tm) :=
   forall L M N , (R L M) -> (R L N) -> exists P, (R M P) /\ (R N P).
 
-Lemma beta1sConf_is_semiConf: diamondProperty beta1step -> 
-  forall L M N, L -->b M -> L -->* N -> exists P, M-->*P /\ N-->*P.
-Proof.
-Admitted.
+
 Hint Resolve beta1sConf_is_semiConf.
 
 Axiom confluence : diamondProperty beta.
