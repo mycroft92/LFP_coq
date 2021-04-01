@@ -1,2 +1,7 @@
 *.vo
 *.swp
+CoqMakefile.conf
+Makefile
+*.aux
+*.glob
+*.vo*
