@@ -280,8 +280,6 @@ Definition diamondProperty (R: relation tm) :=
   forall L M N , (R L M) -> (R L N) -> exists P, (R M P) /\ (R N P).
 
 
-Hint Resolve beta1sConf_is_semiConf.
-
 Axiom confluence : diamondProperty beta.
 (*Assume confluence theorem on transitive closure of beta*)
 (*We prove Church Rosser with confluence on beta*)
